@@ -1,8 +1,7 @@
 import { Model, ModelObject, RelationMappings, RelationMappingsThunk } from "objection";
 import mixins from "src/db/mixin";
 
-
-export class Account extends mixins(Model){
+export class User extends mixins(Model){
     static tableName: string = 'accounts';
 
     public readonly id: string;
