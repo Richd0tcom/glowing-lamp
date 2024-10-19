@@ -2,14 +2,14 @@ import { Model, ModelObject, RelationMappings, RelationMappingsThunk } from "obj
 import mixins from "src/db/mixin";
 
 export class User extends mixins(Model){
-    static tableName: string = 'accounts';
+    static tableName: string = 'users';
 
     public readonly id: string;
     public username: string;
     public password: string;
 
 
-    public created_at: Date | string;
+    public createdAt: Date | string;
 
     static hidden = ["password",] 
 }
