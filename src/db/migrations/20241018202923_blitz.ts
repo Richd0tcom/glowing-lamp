@@ -6,38 +6,37 @@ export async function up(knex: Knex): Promise<void> {
       table.uuid('id').primary().notNullable();
       table.string('username').notNullable().unique();
       table.string('password').notNullable();
-      table.string('txn_pin').notNullable();
-      table.timestamps(true, true);
+      table.timestamps(true, true, true);
     })
     .createTable('transactions', (table) => {
       table.uuid('id').primary().notNullable();
       table
-        .uuid('from_account_id')
+        .uuid('fromUserId')
         .references('id')
         .inTable('users')
         .onDelete('CASCADE')
         .notNullable();
       table
-        .uuid('to_account_id')
+        .uuid('toUserId')
         .references('id')
         .inTable('users')
         .onDelete('CASCADE')
         .notNullable();
       table.string('amount').notNullable();
       table.string('description');
-      table.timestamps(true, true);
+      table.timestamps(true, true, true);
     })
     .createTable('entries', (table) => {
       table.uuid('id').primary().notNullable();
       table
-        .uuid('account_id')
+        .uuid('userId')
         .references('id')
         .inTable('users')
         .onDelete('CASCADE')
         .notNullable();
-      table.enum('tx_type', ['debit, credit']).notNullable();
+      table.enum('txType', ['debit, credit']).notNullable();
 
-      table.timestamps(true, true);
+      table.timestamps(true, true, true);
     });
 }
 
