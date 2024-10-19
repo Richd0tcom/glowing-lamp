@@ -1,8 +1,8 @@
 import { Global, Module } from '@nestjs/common';
-import { Account } from 'src/core/account/entities/account.entity';
+import { User } from 'src/core/user/entities/user.entity';
 
 
-const models = [Account];
+const models = [User];
 const providers = models.map((model) => {
   return {
     provide: model.name,

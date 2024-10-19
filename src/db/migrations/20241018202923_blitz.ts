@@ -2,10 +2,11 @@ import type { Knex } from 'knex';
 
 export async function up(knex: Knex): Promise<void> {
   return await knex.schema
-    .createTable('accounts', (table) => {
+    .createTable('users', (table) => {
       table.uuid('id').primary().notNullable();
       table.string('username').notNullable().unique();
       table.string('password').notNullable();
+      table.string('txn_pin').notNullable();
       table.timestamps(true, true);
     })
     .createTable('transactions', (table) => {
@@ -13,13 +14,13 @@ export async function up(knex: Knex): Promise<void> {
       table
         .uuid('from_account_id')
         .references('id')
-        .inTable('accounts')
+        .inTable('users')
         .onDelete('CASCADE')
         .notNullable();
       table
         .uuid('to_account_id')
         .references('id')
-        .inTable('accounts')
+        .inTable('users')
         .onDelete('CASCADE')
         .notNullable();
       table.string('amount').notNullable();
@@ -31,7 +32,7 @@ export async function up(knex: Knex): Promise<void> {
       table
         .uuid('account_id')
         .references('id')
-        .inTable('accounts')
+        .inTable('users')
         .onDelete('CASCADE')
         .notNullable();
       table.enum('tx_type', ['debit, credit']).notNullable();
@@ -41,7 +42,7 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 export async function down(knex: Knex): Promise<void> {
-  await knex.raw('DROP TABLE "accounts" CASCADE');
+  await knex.raw('DROP TABLE "users" CASCADE');
   await knex.raw('DROP TABLE "transactions" CASCADE');
   return await knex.raw('DROP TABLE "entries" CASCADE');
 }
