@@ -8,7 +8,7 @@ export async function up(knex: Knex): Promise<void> {
       table.string('password').notNullable();
       table.timestamps(true, true, true);
     })
-    .createTable('transactions', (table) => {
+    .createTable('transfers', (table) => {
       table.uuid('id').primary().notNullable();
       table
         .uuid('fromUserId')
@@ -28,13 +28,14 @@ export async function up(knex: Knex): Promise<void> {
     })
     .createTable('entries', (table) => {
       table.uuid('id').primary().notNullable();
+      table.string('amount').notNullable();
       table
         .uuid('userId')
         .references('id')
         .inTable('users')
         .onDelete('CASCADE')
         .notNullable();
-      table.enum('txType', ['debit, credit']).notNullable();
+      table.enum('txType', ['debit', 'credit']).notNullable();
 
       table.timestamps(true, true, true);
     });
@@ -42,6 +43,6 @@ export async function up(knex: Knex): Promise<void> {
 
 export async function down(knex: Knex): Promise<void> {
   await knex.raw('DROP TABLE "users" CASCADE');
-  await knex.raw('DROP TABLE "transactions" CASCADE');
+  await knex.raw('DROP TABLE "transfers" CASCADE');
   return await knex.raw('DROP TABLE "entries" CASCADE');
 }

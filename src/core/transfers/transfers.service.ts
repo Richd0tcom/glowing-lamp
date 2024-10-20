@@ -1,30 +1,38 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
 import { CreateTransferDto } from './dto/create-transfer.dto';
-import { UpdateTransferDto } from './dto/update-transfer.dto';
-import { transaction } from 'objection';
+import { ModelClass, transaction } from 'objection';
 import { User } from '../user/entities/user.entity';
 import { Entry, Transfer, TxType } from './entities/transfer.entity';
 import { isTrueModel } from 'src/common/helpers/object';
 
 @Injectable()
 export class TransfersService {
-  async create(createTransferDto: CreateTransferDto) {
+  constructor(@Inject('User') private userModel: ModelClass<User>,){}
 
-    const fromUser = await User.query().findById(createTransferDto.fromUserId);
-    if(!isTrueModel(fromUser)){
-
-      //throw instead
-      return 'user not found'
+  async create(userId: string, createTransferDto: CreateTransferDto) {
+    const fromUser = await User.query().findById(userId);
+    if (!isTrueModel(fromUser)) {
+      throw new UnauthorizedException()
     }
 
-    const toUser = await User.query().findOne({id: createTransferDto.toUserId});
+    const toUser = await User.query().findOne({
+      id: createTransferDto.toUserId,
+    });
 
-    if(!isTrueModel(toUser)){
-      return 'user not found'
+    if (!isTrueModel(toUser)) {
+      throw new UnauthorizedException('recipient does not exist')
     }
 
+    const rd = await this.createTransaction(
+      userId,
+      createTransferDto.toUserId,
+      createTransferDto.amount,
+      createTransferDto.description,
+    );
 
-    return 'This action adds a new transfer';
+    console.log(rd)
+
+    return rd;
   }
 
   private async createTransaction(
@@ -38,14 +46,11 @@ export class TransfersService {
         Transfer,
         Entry,
         async (Transfer, Entry) => {
-
-
           // debit from user
           await Entry.query().insert({
             userId: fromUserId,
             amount,
             txType: TxType.DEBIT,
-            description
           });
 
           // credit to user
@@ -53,7 +58,6 @@ export class TransfersService {
             userId: toUserId,
             amount,
             txType: TxType.CREDIT,
-            description
           });
 
           //record transfer
@@ -61,17 +65,24 @@ export class TransfersService {
             fromUserId,
             toUserId,
             amount,
-            description
-          })
+            description,
+          });
 
-          // add graph fetched users 
-          return await Transfer.query().findById(Tf.id)
+          // add graph fetched users
+          return await Transfer.query().findById(Tf.id);
         },
       );
 
-      return trans
+      return trans;
     } catch (error) {
-      throw Error('kx transaction failed')
+      console.log(error)
+      throw new ServiceUnavailableException('kx transaction failed');
     }
+  }
+
+  async getTransfers(userId: string) {
+    const transfers = await Transfer.query().where('fromUserId', userId);
+
+    return transfers;
   }
 }
