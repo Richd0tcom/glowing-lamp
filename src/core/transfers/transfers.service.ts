@@ -1,4 +1,4 @@
-import { Inject, Injectable, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
 import { CreateTransferDto } from './dto/create-transfer.dto';
 import { ModelClass, transaction } from 'objection';
 import { User } from '../user/entities/user.entity';
@@ -7,7 +7,8 @@ import { isTrueModel } from 'src/common/helpers/object';
 
 @Injectable()
 export class TransfersService {
-  constructor(@Inject('User') private userModel: ModelClass<User>,){}
+  constructor(@Inject('User') private userModel: ModelClass<User>,
+private userService){}
 
   async create(userId: string, createTransferDto: CreateTransferDto) {
     const fromUser = await User.query().findById(userId);
@@ -16,16 +17,22 @@ export class TransfersService {
     }
 
     const toUser = await User.query().findOne({
-      id: createTransferDto.toUserId,
+      username: createTransferDto.toUsername,
     });
 
     if (!isTrueModel(toUser)) {
       throw new UnauthorizedException('recipient does not exist')
     }
 
+    if (userId === toUser.id){
+      throw new ForbiddenException('cannot send to self')
+    }
+
+    //check balance from cache
+
     const rd = await this.createTransaction(
       userId,
-      createTransferDto.toUserId,
+      toUser.id,
       createTransferDto.amount,
       createTransferDto.description,
     );

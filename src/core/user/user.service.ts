@@ -11,10 +11,6 @@ import { isTrueModel } from 'src/common/helpers/object';
 export class UserService {
   constructor(@Inject('Entry') private Entry: ModelClass<Entry>, @Inject('User') private User: ModelClass<User>) {}
 
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
-  }
-
   async getDetails(username: string) {
     const user = await User.query().findOne({username});
 
@@ -41,6 +37,6 @@ export class UserService {
 
     console.log(balanceResult.currentBalance);
 
-    return balanceResult?.currentBalance || 0;
+    return balanceResult
   }
 }

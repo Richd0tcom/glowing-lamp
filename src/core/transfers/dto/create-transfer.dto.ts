@@ -1,3 +1,4 @@
+import { ApiProperty } from "@nestjs/swagger";
 import * as Joi from "joi";
 import { JoiSchema, JoiSchemaOptions } from "nestjs-joi";
 
@@ -5,8 +6,10 @@ import { JoiSchema, JoiSchemaOptions } from "nestjs-joi";
     allowUnknown: false,
   })
 export class CreateTransferDto {
+
+    @ApiProperty({ example: "rich", description: 'The username of the recipient' })
     @JoiSchema(Joi.string().required())
-    toUserId: string;
+    toUsername: string;
 
     @JoiSchema(Joi.string().required())
     amount: string;
