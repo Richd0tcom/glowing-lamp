@@ -35,14 +35,13 @@ export class AuthService {
       username: account.username,
     });
     return {
-      data: account,
+      user: account,
       access_token: token,
     };
   }
 
   async signIn(createAuthDto: CreateAuthDto) {
-    //TODO check valid username
-    // graph fetch entries to make balance
+
     // graph fetch transactions
     //Cache balances
     let account = await this.userModel.query().findOne({ username: createAuthDto.username });
@@ -59,7 +58,7 @@ export class AuthService {
       username: account.username,
     });
     return {
-      data: account,
+      user: account,
       access_token: token,
     };
   }

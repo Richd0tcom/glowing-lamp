@@ -1,10 +1,12 @@
-import { Controller, Get, Post, Body, Request, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Request, Patch, Param, Delete, UseGuards, UseFilters } from '@nestjs/common';
 import { TransfersService } from './transfers.service';
 import { CreateTransferDto } from './dto/create-transfer.dto';
 import { JwtAuthGuard } from 'src/common/guards/jwt.guard';
 import { ApiTags } from '@nestjs/swagger';
+import { HttpExceptionFilter } from 'src/common/filters/exception.filter';
 
 @ApiTags('Transfers')
+@UseFilters(HttpExceptionFilter)
 @Controller('transfers')
 export class TransfersController {
   constructor(private readonly transfersService: TransfersService) {}

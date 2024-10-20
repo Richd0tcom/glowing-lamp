@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Request,  Patch, Param, Delete, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Body, Request,  Patch, Param, Delete, UseGuards, UseInterceptors, UseFilters } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from 'src/common/guards/jwt.guard';
 import {
@@ -7,10 +7,12 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { ExcludeNullInterceptor } from 'src/common/f.interceptor';
+import { ResponseHandler } from 'src/common/f.interceptor';
+import { HttpExceptionFilter } from 'src/common/filters/exception.filter';
 
 @ApiTags('Users')
-@UseInterceptors(ExcludeNullInterceptor)
+@UseFilters(HttpExceptionFilter)
+@UseInterceptors(ResponseHandler)
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
