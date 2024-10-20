@@ -12,7 +12,6 @@ Model.knex(KnexInstance);
 
 const modelUuid = guid();
 
-// Import the plugin.
 export const modelUnique = objection_unique({
   fields: ['username'],
   identifiers: ['id'],

@@ -11,9 +11,9 @@ export class CreateTransferDto {
     @JoiSchema(Joi.string().required())
     toUsername: string;
 
-    @JoiSchema(Joi.string().required())
-    amount: string;
+    @JoiSchema(Joi.number().required())
+    amount: number;
 
-    @JoiSchema(Joi.string())
+    @JoiSchema(Joi.string().allow(""))
     description: string;
 }

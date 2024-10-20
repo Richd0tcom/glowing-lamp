@@ -1,29 +1,76 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ModelClass } from 'objection';
 import { User } from './entities/user.entity';
 import { Entry, Transfer } from '../transfers/entities/transfer.entity';
 import { KnexInstance } from 'src/db';
 import { isTrueModel } from 'src/common/helpers/object';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
+
+export interface Balance {
+  currentBalance: string;
+  userId: string;
+}
+
+export interface BalanceWithUsername extends Balance {
+  username: string
+}
 
 @Injectable()
 export class UserService {
-  constructor(@Inject('Entry') private Entry: ModelClass<Entry>, @Inject('User') private User: ModelClass<User>) {}
+  constructor(
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    @Inject('User') private User: ModelClass<User>,
+  ) {}
 
   async getDetails(username: string) {
-    const user = await User.query().findOne({username});
+    const user = await User.query().findOne({ username });
 
     if (!isTrueModel(user)) {
-      throw new NotFoundException('user not found')
+      throw new NotFoundException('user not found');
     }
 
     return user;
   }
 
   async getDetailsWithBalance(userId: string) {
+    const user = await this.User.query().findById(userId);
 
-    const results = await KnexInstance('entries')
+    if (!isTrueModel(user)) {
+      throw new NotFoundException('user not found');
+    }
+
+    const bal: BalanceWithUsername = await this.cacheManager.get(`bal-${userId}`)
+    
+    if(bal) {
+      return bal
+    }
+
+    const result = await this.fetchBalance(userId)
+
+    const balanceResult: BalanceWithUsername = {
+      ...result,
+      username: user.username,
+    };
+
+    //cache the value for subsequent fetch
+    await this.cacheManager.set(`bal-${userId}`, balanceResult);
+
+    return balanceResult;
+  }
+
+  async fetchBalance(userId: string, fromDb: boolean = true) {
+    if(!fromDb) {
+      const bal: Balance = await this.cacheManager.get(`bal-${userId}`)
+      if(bal){
+        return bal
+      }
+    }
+    const results: Balance[] = await KnexInstance('entries')
       .select({
         userId: 'userId',
         currentBalance: KnexInstance.raw(
@@ -33,10 +80,16 @@ export class UserService {
       .where('userId', '=', userId)
       .groupBy('userId');
 
-    const balanceResult = results[0];
+      return results[0]
+  }
 
-    console.log(balanceResult.currentBalance);
+  async updateBalance(user: User) {
+    const bal = await this.fetchBalance(user.id)
+    const balance: BalanceWithUsername = {
+      ...bal,
+      username: user.username
+    }
 
-    return balanceResult
+    await this.cacheManager.set(`bal-${user.id}`, balance);
   }
 }

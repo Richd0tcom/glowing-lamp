@@ -1,6 +1,5 @@
 import { Model } from 'objection';
 import Knex from 'knex';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 import knexfile from './knexfile';
 
 export function dbSetup() {

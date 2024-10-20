@@ -1,45 +1,61 @@
-import { ForbiddenException, Inject, Injectable, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Inject,
+  Injectable,
+  ServiceUnavailableException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateTransferDto } from './dto/create-transfer.dto';
 import { ModelClass, transaction } from 'objection';
 import { User } from '../user/entities/user.entity';
 import { Entry, Transfer, TxType } from './entities/transfer.entity';
 import { isTrueModel } from 'src/common/helpers/object';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class TransfersService {
-  constructor(@Inject('User') private userModel: ModelClass<User>,
-private userService){}
+  constructor(
+    @Inject('User') private User: ModelClass<User>,
+    @Inject() private userService: UserService,
+  ) {}
 
   async create(userId: string, createTransferDto: CreateTransferDto) {
-    const fromUser = await User.query().findById(userId);
+    const fromUser = await this.User.query().findById(userId);
     if (!isTrueModel(fromUser)) {
-      throw new UnauthorizedException()
+      throw new UnauthorizedException();
     }
 
-    const toUser = await User.query().findOne({
+    const toUser = await this.User.query().findOne({
       username: createTransferDto.toUsername,
     });
 
     if (!isTrueModel(toUser)) {
-      throw new UnauthorizedException('recipient does not exist')
+      throw new UnauthorizedException('recipient does not exist');
     }
 
-    if (userId === toUser.id){
-      throw new ForbiddenException('cannot send to self')
+    if (userId === toUser.id) {
+      throw new ForbiddenException('cannot send to self');
     }
 
     //check balance from cache
+    const balance = await this.userService.fetchBalance(userId, false);
+    if (Number(balance.currentBalance) < Number(createTransferDto.amount)) {
+      throw new ForbiddenException('insufficient funds');
+    }
 
-    const rd = await this.createTransaction(
+    const tx = await this.createTransaction(
       userId,
       toUser.id,
-      createTransferDto.amount,
+      String(createTransferDto.amount),
       createTransferDto.description,
     );
 
-    console.log(rd)
+    await Promise.all([
+      this.userService.updateBalance(fromUser),
+      this.userService.updateBalance(toUser),
+    ]);
 
-    return rd;
+    return tx;
   }
 
   private async createTransaction(
@@ -82,13 +98,13 @@ private userService){}
 
       return trans;
     } catch (error) {
-      console.log(error)
+      console.log(error);
       throw new ServiceUnavailableException('kx transaction failed');
     }
   }
 
   async getTransfers(userId: string) {
-    const transfers = await Transfer.query().where('fromUserId', userId);
+    const transfers = await Transfer.query().where('fromUserId', userId).orWhere("toUserId", userId);
 
     return transfers;
   }
