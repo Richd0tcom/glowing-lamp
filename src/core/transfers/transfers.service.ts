@@ -103,8 +103,12 @@ export class TransfersService {
     }
   }
 
-  async getTransfers(userId: string) {
-    const transfers = await Transfer.query().where('fromUserId', userId).orWhere("toUserId", userId);
+  async getTransfers(userId: string, page: number = 1) {
+    const transfers = await Transfer.query()
+      .where('fromUserId', userId)
+      .orWhere('toUserId', userId)
+      .withGraphFetched('[sender, recipient]')
+      .page(page - 1, 3);
 
     return transfers;
   }
