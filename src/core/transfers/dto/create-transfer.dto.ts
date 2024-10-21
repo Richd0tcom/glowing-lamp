@@ -2,6 +2,9 @@ import { ApiProperty } from "@nestjs/swagger";
 import * as Joi from "joi";
 import { JoiSchema, JoiSchemaOptions } from "nestjs-joi";
 
+/**
+ * Data object for creating transfers
+ */
 @JoiSchemaOptions({
     allowUnknown: false,
   })

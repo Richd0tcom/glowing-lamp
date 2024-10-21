@@ -19,11 +19,14 @@ import { ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from 'src/common/filters/exception.filter';
 import { ResponseHandler } from 'src/common/interceptors/response.interceptor';
 import { FetchTransferQueryParamsDto } from './dto/fetch-transfers.dto';
-import { Reference, Transfer, TxType } from './entities/transfer.entity';
+import { Reference, Transfer } from './entities/transfer.entity';
 import { AuthRequest } from 'src/common/interfaces/common.interface';
 
 
 
+/**
+ * Transfer Controller for handling routes prefixed with /transfers
+ */
 @ApiTags('Transfers')
 @UseFilters(HttpExceptionFilter)
 @UseInterceptors(ResponseHandler)

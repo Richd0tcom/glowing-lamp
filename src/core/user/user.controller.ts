@@ -12,6 +12,9 @@ import { HttpExceptionFilter } from 'src/common/filters/exception.filter';
 import { AuthRequest, BalanceWithUsername } from 'src/common/interfaces/common.interface';
 import { User } from './entities/user.entity';
 
+/**
+ * User controller for handling routes prefixed with /users
+ */
 @ApiTags('Users')
 @UseFilters(HttpExceptionFilter)
 @UseInterceptors(ResponseHandler)

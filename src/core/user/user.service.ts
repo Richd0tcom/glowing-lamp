@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { ModelClass } from 'objection';
 import { User } from './entities/user.entity';
-import { Entry, Transfer } from '../transfers/entities/transfer.entity';
 import { KnexInstance } from 'src/db';
 import { isTrueModel } from 'src/common/helpers/object';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';

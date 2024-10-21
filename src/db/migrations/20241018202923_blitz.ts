@@ -1,5 +1,15 @@
 import type { Knex } from 'knex';
 
+/**
+ * ******************************************
+ * *              DO NOT EDIT               *
+ * ******************************************   
+ * 
+ * Database migrations for KnexJS
+ *       
+ */
+
+
 export async function up(knex: Knex): Promise<void> {
   return await knex.schema
     .createTable('users', (table) => {
@@ -10,11 +20,6 @@ export async function up(knex: Knex): Promise<void> {
     })
     .createTable('references', (table) => {
       table.uuid('id').primary().notNullable();
-      // table
-      //   .uuid('transactionId')
-      //   .references('id')
-      //   .inTable('transfers')
-      //   .onDelete('CASCADE')
       table.timestamps(true, true, true);
     })
     .createTable('transfers', (table) => {

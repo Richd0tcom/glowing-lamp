@@ -1,8 +1,12 @@
 import { ApiProperty } from "@nestjs/swagger";
 import * as Joi from "joi";
 import { JoiSchema, JoiSchemaOptions } from "nestjs-joi";
-import { TxType } from "../entities/transfer.entity";
+import { TxType } from "src/common/enums/common.enums";
 
+
+/**
+ * Data object for filtering transfers
+ */
 @JoiSchemaOptions({
     allowUnknown: false,
   })

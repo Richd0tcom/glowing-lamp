@@ -1,5 +1,6 @@
 import { Global, Module } from '@nestjs/common';
-import { Entry, Reference, Transfer } from 'src/core/transfers/entities/transfer.entity';
+import { Entry } from 'src/core/transfers/entities/entry.entity';
+import { Reference, Transfer } from 'src/core/transfers/entities/transfer.entity';
 import { User } from 'src/core/user/entities/user.entity';
 
 
@@ -11,6 +12,9 @@ const providers = models.map((model) => {
   };
 });
 
+/**
+ * Database module for providing queries
+ */
 @Global()
 @Module({
   providers: [...providers],

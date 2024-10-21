@@ -9,15 +9,19 @@ import {
 import { CreateTransferDto } from './dto/create-transfer.dto';
 import { ModelClass, transaction } from 'objection';
 import { User } from '../user/entities/user.entity';
-import { Entry, Reference, Transfer, TxType } from './entities/transfer.entity';
+import { Reference, Transfer,} from './entities/transfer.entity';
 import { isTrueModel } from 'src/common/helpers/object';
 import { UserService } from '../user/user.service';
 import { FetchTransferQueryParamsDto } from './dto/fetch-transfers.dto';
+import { TransactionExceptionMessage, TxType } from 'src/common/enums/common.enums';
+import { Entry } from './entities/entry.entity';
 
 @Injectable()
 export class TransfersService {
   constructor(
     @Inject('User') private User: ModelClass<User>,
+    @Inject('Entry') private Entry: ModelClass<Entry>,
+    @Inject('Transfer') private Transfer: ModelClass<Transfer>,
     @Inject('Reference') private Reference: ModelClass<Reference>,
     @Inject() private userService: UserService,
   ) {}
@@ -45,11 +49,11 @@ export class TransfersService {
     );
 
     if (!isTrueModel(ref)) {
-      throw new ForbiddenException('no transaction reference');
+      throw new ForbiddenException(TransactionExceptionMessage.INVALID_TX_REFERENCE);
     }
 
     if (ref.transactionId !== null) {
-      throw new ForbiddenException('duplicate transaction reference');
+      throw new ForbiddenException(TransactionExceptionMessage.DUPLICATE_TX_REFERENCE);
     }
 
     const toUser = await this.User.query().findOne({
@@ -57,23 +61,23 @@ export class TransfersService {
     });
 
     if (!isTrueModel(toUser)) {
-      throw new NotFoundException('recipient does not exist');
+      throw new NotFoundException(TransactionExceptionMessage.NO_RECIPIENT);
     }
 
     if (userId === toUser.id) {
-      throw new ForbiddenException('cannot send to self');
+      throw new ForbiddenException(TransactionExceptionMessage.SEND_TO_SELF_EXCEPTION);
     }
 
     
     const balance = await this.userService.fetchBalance(userId, false);
     if (Number(balance.currentBalance) < Number(createTransferDto.amount)) {
-      throw new ForbiddenException('insufficient funds');
+      throw new ForbiddenException(TransactionExceptionMessage.INSUFFICIENT_FUND);
     }
 
     const tx = await this.createTransaction(
       userId,
       toUser.id,
-      String(createTransferDto.amount),
+      Number(createTransferDto.amount),
       createTransferDto.transactionReference,
       createTransferDto.description,
     );
@@ -86,7 +90,12 @@ export class TransfersService {
     return tx;
   }
 
-  async createRef() {
+  /**
+   * Generates a unique transaction reference
+   * 
+   * @returns {Promise<Reference>}
+   */
+  async createRef(): Promise<Reference> {
     const tx = await this.Reference.query().insert({});
     return tx;
   }
@@ -94,14 +103,14 @@ export class TransfersService {
   private async createTransaction(
     fromUserId: string,
     toUserId: string,
-    amount: string,
+    amount: number,
     transactionReference: string,
     description: string = '',
   ) {
     try {
       const trans = await transaction(
-        Transfer,
-        Entry,
+        this.Transfer,
+        this.Entry,
         this.Reference,
         async (Transfer, Entry, Reference) => {
 
@@ -151,11 +160,18 @@ export class TransfersService {
       return trans;
     } catch (error) {
       console.log(error);
-      throw new ServiceUnavailableException('kx transaction failed');
+      throw new ServiceUnavailableException(TransactionExceptionMessage.TX_FAILED);
     }
   }
 
-  async getTransfers(userId: string, query: FetchTransferQueryParamsDto) {
+  /**
+   * Fetch users transfers while providing filtering and pagination
+   * 
+   * @param userId 
+   * @param query 
+   * @returns {Promise<{ page: number; total: number; results: Transfer[]; }>}
+   */
+  async getTransfers(userId: string, query: FetchTransferQueryParamsDto): Promise<{ page: number; total: number; results: Transfer[]; }> {
     const page = Number(query?.page) || 1;
     const transfers = await Transfer.query()
       .where('fromUserId', userId)

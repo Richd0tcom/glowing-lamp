@@ -5,8 +5,9 @@ import { User } from 'src/core/user/entities/user.entity';
 import { checkPassword, hashPassword } from 'src/common/helpers/password';
 import { JwtService } from '@nestjs/jwt';
 import { isTrueModel } from 'src/common/helpers/object';
-import { Entry, TxType } from 'src/core/transfers/entities/transfer.entity';
 import { AuthResponse } from 'src/common/interfaces/common.interface';
+import { Entry } from 'src/core/transfers/entities/entry.entity';
+import { TxType } from 'src/common/enums/common.enums';
 
 @Injectable()
 export class AuthService {
