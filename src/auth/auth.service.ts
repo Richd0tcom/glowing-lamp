@@ -5,20 +5,24 @@ import { User } from 'src/core/user/entities/user.entity';
 import { checkPassword, hashPassword } from 'src/common/helpers/password';
 import { JwtService } from '@nestjs/jwt';
 import { isTrueModel } from 'src/common/helpers/object';
+import { Entry, TxType } from 'src/core/transfers/entities/transfer.entity';
+import { AuthResponse } from 'src/common/interfaces/common.interface';
 
 @Injectable()
 export class AuthService {
   constructor(
     private jwtService: JwtService,
     @Inject('User') private userModel: ModelClass<User>,
+    @Inject('Entry') private Entry: ModelClass<Entry>,
   ) {}
 
-  async signUp(createAuthDto: CreateAuthDto) {
-    /**
-     * TODO:
-     * check for existing username
-     * Give initial balance of 500
-     */
+  /**
+   * Registers a new user
+   * 
+   * @param createAuthDto 
+   * @returns 
+   */
+  async signUp(createAuthDto: CreateAuthDto): Promise<AuthResponse> {
     let existingAccount = await this.userModel.query().findOne({ username: createAuthDto.username });
 
     if(isTrueModel(existingAccount)){
@@ -34,16 +38,24 @@ export class AuthService {
       id: account.id,
       username: account.username,
     });
+
+    /**
+     * Every user gets an amount of 30 on signup (for testing purposes)
+     */
+    await this.Entry.query().insert({
+      userId: account.id,
+      txType: TxType.CREDIT,
+      amount: 30
+    })
+
     return {
       user: account,
       access_token: token,
     };
   }
 
-  async signIn(createAuthDto: CreateAuthDto) {
+  async signIn(createAuthDto: CreateAuthDto): Promise<AuthResponse> {
 
-    // graph fetch transactions
-    //Cache balances
     let account = await this.userModel.query().findOne({ username: createAuthDto.username });
     if(!isTrueModel(account)){
       throw new UnauthorizedException('username or password incorrect');

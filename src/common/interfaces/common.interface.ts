@@ -1,4 +1,5 @@
 import { Request } from 'express';
+import { User } from 'src/core/user/entities/user.entity';
 
 /**
  * Current authenticated user decoded from the auth payload
@@ -28,4 +29,12 @@ export interface Balance {
  */
 export interface BalanceWithUsername extends Balance {
   username: string;
+}
+
+/**
+ * interface implementing auth response
+ */
+export interface AuthResponse {
+  user: User;
+  access_token: string
 }

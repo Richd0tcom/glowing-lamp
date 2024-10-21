@@ -4,7 +4,7 @@ import { CallHandler, ExecutionContext, INestApplication, Injectable, NestInterc
 import { Observable } from 'rxjs';
 
 /**
- *  Intercepts the response to give a unifed schema
+ *  Intercepts the response to give a unifed response schema
  */
 @Injectable()
 export class ResponseHandler implements NestInterceptor {

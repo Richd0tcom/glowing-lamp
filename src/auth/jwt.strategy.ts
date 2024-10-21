@@ -2,6 +2,11 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
 
+/**
+ * Implements the Passport JWT strategy for Validating JWT
+ * 
+ * It also add the the user (payload) to the request object
+ */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {

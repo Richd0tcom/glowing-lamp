@@ -6,12 +6,9 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 
-export const getErrorMessage = <T extends Error>(exception: T): string => {
-  return exception instanceof HttpException
-    ? exception.message
-    : String(exception);
-};
-
+/**
+ * Exception filter for catching errors and returning them in a consistent format
+ */
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter<HttpException> {
   catch(exception: HttpException, host: ArgumentsHost): void {

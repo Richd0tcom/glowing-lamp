@@ -48,9 +48,9 @@ export class Entry extends mixins(Model) {
 
   public readonly id: string;
   public userId: string;
-  public amount: string;
+  public amount: string | number;
   public txType: TxType;
-  public description: string;
+
 
   public createdAt: Date | string;
 }
