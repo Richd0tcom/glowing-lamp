@@ -53,7 +53,14 @@ To set up and run this application, follow these steps:
 
 3. Set up environment variables (see [below](#environment-variables) for details).
 
-4. Run the application:
+4. Run migrations
+
+```bash
+  npm run migrateup
+```
+N/B run `npm run seed` to create two readily available test users locally.
+
+5. Run the application:
 
 ```bash
   npm start
