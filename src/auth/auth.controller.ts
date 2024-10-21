@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UseFilters, HttpCode, HttpStatus, NotFoundException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateAuthDto } from './dto/create-auth.dto';
-import { ResponseHandler } from 'src/common/f.interceptor';
+import { ResponseHandler } from 'src/common/interceptors/response.interceptor';
 import { HttpExceptionFilter } from 'src/common/filters/exception.filter';
 
 @UseFilters(HttpExceptionFilter)

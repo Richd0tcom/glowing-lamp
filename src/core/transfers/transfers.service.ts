@@ -2,6 +2,7 @@ import {
   ForbiddenException,
   Inject,
   Injectable,
+  NotFoundException,
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -21,20 +22,34 @@ export class TransfersService {
     @Inject() private userService: UserService,
   ) {}
 
-  async create(userId: string, createTransferDto: CreateTransferDto) {
+  /**
+   * Transfers funds between two users using their usernames.
+   * 
+   * @async
+   * @param {CreateTransferDto} createTransferDto - The transfer data object.
+   *
+   * @returns {Promise<Transfer>} - The created transfer transaction.
+   *
+   */
+  async create(
+    userId: string,
+    createTransferDto: CreateTransferDto,
+  ): Promise<Transfer> {
     const fromUser = await this.User.query().findById(userId);
     if (!isTrueModel(fromUser)) {
       throw new UnauthorizedException();
     }
 
-    const ref = await this.Reference.query().findById(createTransferDto.transactionReference)
+    const ref = await this.Reference.query().findById(
+      createTransferDto.transactionReference,
+    );
 
-    if(!isTrueModel(ref)){
-      throw new ForbiddenException('no transaction reference')
+    if (!isTrueModel(ref)) {
+      throw new ForbiddenException('no transaction reference');
     }
 
-    if(ref.transactionId !== null) {
-      throw new ForbiddenException('duplicate transaction reference')
+    if (ref.transactionId !== null) {
+      throw new ForbiddenException('duplicate transaction reference');
     }
 
     const toUser = await this.User.query().findOne({
@@ -42,14 +57,14 @@ export class TransfersService {
     });
 
     if (!isTrueModel(toUser)) {
-      throw new UnauthorizedException('recipient does not exist');
+      throw new NotFoundException('recipient does not exist');
     }
 
     if (userId === toUser.id) {
       throw new ForbiddenException('cannot send to self');
     }
 
-    //check balance from cache
+    
     const balance = await this.userService.fetchBalance(userId, false);
     if (Number(balance.currentBalance) < Number(createTransferDto.amount)) {
       throw new ForbiddenException('insufficient funds');
@@ -72,7 +87,7 @@ export class TransfersService {
   }
 
   async createRef() {
-    const tx = await this.Reference.query().insert({})
+    const tx = await this.Reference.query().insert({});
     return tx;
   }
 
@@ -80,7 +95,7 @@ export class TransfersService {
     fromUserId: string,
     toUserId: string,
     amount: string,
-    transactionReference:string,
+    transactionReference: string,
     description: string = '',
   ) {
     try {
@@ -89,34 +104,47 @@ export class TransfersService {
         Entry,
         this.Reference,
         async (Transfer, Entry, Reference) => {
-          // debit from user
+
+          /**
+           * Debit from user
+           */
           await Entry.query().insert({
             userId: fromUserId,
             amount,
             txType: TxType.DEBIT,
           });
 
-          // credit to user
+          /**
+           * credit to user
+           *  */ 
           await Entry.query().insert({
             userId: toUserId,
             amount,
             txType: TxType.CREDIT,
           });
 
-          //record transfer
+          /**
+           * record transfer
+           */
+          
           const Tf = await Transfer.query().insert({
             fromUserId,
             toUserId,
             amount,
             description,
-            transactionReference
+            transactionReference,
           });
 
           await Reference.query().patchAndFetchById(transactionReference, {
-            transactionId: Tf.id
-          })
+            transactionId: Tf.id,
+          });
 
-          return await Transfer.query().findById(Tf.id).withGraphFetched('[sender, recipient]');
+          /**
+           * Retrieve Transfer with participant details
+           */
+          return await Transfer.query()
+            .findById(Tf.id)
+            .withGraphFetched('[sender, recipient]');
         },
       );
 
@@ -128,15 +156,13 @@ export class TransfersService {
   }
 
   async getTransfers(userId: string, query: FetchTransferQueryParamsDto) {
-
-    const page = Number(query?.page) || 1
+    const page = Number(query?.page) || 1;
     const transfers = await Transfer.query()
       .where('fromUserId', userId)
       .orWhere('toUserId', userId)
       .withGraphFetched('[sender, recipient]')
       .page(page - 1, 3);
 
-
-    return {...transfers, page};
+    return { ...transfers, page };
   }
 }

@@ -10,15 +10,9 @@ import { Entry, Transfer } from '../transfers/entities/transfer.entity';
 import { KnexInstance } from 'src/db';
 import { isTrueModel } from 'src/common/helpers/object';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
+import { BalanceWithUsername, Balance } from 'src/common/interfaces/common.interface';
 
-export interface Balance {
-  currentBalance: string;
-  userId: string;
-}
 
-export interface BalanceWithUsername extends Balance {
-  username: string
-}
 
 @Injectable()
 export class UserService {
@@ -27,6 +21,12 @@ export class UserService {
     @Inject('User') private User: ModelClass<User>,
   ) {}
 
+  /**
+   * Gets a users details with their username
+   * 
+   * @param username - username
+   * @returns 
+   */
   async getDetails(username: string) {
     const user = await User.query().findOne({ username });
 
@@ -37,6 +37,12 @@ export class UserService {
     return user;
   }
 
+  /**
+   * Fetches the users details with their balance
+   * 
+   * @param userId 
+   * @returns {Promise<BalanceWithUsername>}
+   */
   async getDetailsWithBalance(userId: string) {
     const user = await this.User.query().findById(userId);
 
@@ -57,13 +63,19 @@ export class UserService {
       username: user.username,
     };
 
-    //cache the value for subsequent fetch
     await this.cacheManager.set(`bal-${userId}`, balanceResult);
 
     return balanceResult;
   }
 
-  async fetchBalance(userId: string, fromDb: boolean = true) {
+  /**
+   * Fetch the callers balance
+   * 
+   * @param {string} userId - current user ID
+   * @param {boolean} fromDb - fetches directly from Database if true
+   * @returns {Promise<Balance>}
+   */
+  async fetchBalance(userId: string, fromDb: boolean = true): Promise<Balance> {
     if(!fromDb) {
       const bal: Balance = await this.cacheManager.get(`bal-${userId}`)
       if(bal){
@@ -83,6 +95,11 @@ export class UserService {
       return results[0]
   }
 
+  /**
+   * Updates the cache with the users balance
+   * 
+   * @param {User} user 
+   */
   async updateBalance(user: User) {
     const bal = await this.fetchBalance(user.id)
     const balance: BalanceWithUsername = {
