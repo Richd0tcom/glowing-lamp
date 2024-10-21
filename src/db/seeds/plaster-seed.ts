@@ -7,7 +7,6 @@ export async function seed(knex: Knex): Promise<void> {
     // Inserts seed entries
     await knex("users").insert(
         ids.users.map((user: string, index: number)=>{
-            console.log(user)
             return {
                 id: user,
                 username: `user-${String(index)}`,

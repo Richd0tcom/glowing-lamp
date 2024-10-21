@@ -159,7 +159,6 @@ export class TransfersService {
 
       return trans;
     } catch (error) {
-      console.log(error);
       throw new ServiceUnavailableException(TransactionExceptionMessage.TX_FAILED);
     }
   }

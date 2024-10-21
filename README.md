@@ -63,14 +63,13 @@ To set up and run this application, follow these steps:
 ## API Documentation
 
 The API documentation is available at:
-[Your Swagger URL]
+[this place on the internet](https://documenter.getpostman.com/view/22009828/2sAXxY38ac#8de1f09e-27ed-4c71-92a6-6afd3da36eb0)
 
 This documentation provides detailed information about all endpoints, request/response formats, and available parameters.
 
 ## Endpoints
 
-A Postman collection containing all the implemented endpoints can be found at:
-[Your Postman Collection Link]
+A Postman collection containing all the implemented endpoints can be found in the submission email
 
 ## Environment Variables
 
