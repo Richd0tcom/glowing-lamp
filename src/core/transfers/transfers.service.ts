@@ -8,14 +8,16 @@ import {
 import { CreateTransferDto } from './dto/create-transfer.dto';
 import { ModelClass, transaction } from 'objection';
 import { User } from '../user/entities/user.entity';
-import { Entry, Transfer, TxType } from './entities/transfer.entity';
+import { Entry, Reference, Transfer, TxType } from './entities/transfer.entity';
 import { isTrueModel } from 'src/common/helpers/object';
 import { UserService } from '../user/user.service';
+import { FetchTransferQueryParamsDto } from './dto/fetch-transfers.dto';
 
 @Injectable()
 export class TransfersService {
   constructor(
     @Inject('User') private User: ModelClass<User>,
+    @Inject('Reference') private Reference: ModelClass<Reference>,
     @Inject() private userService: UserService,
   ) {}
 
@@ -23,6 +25,16 @@ export class TransfersService {
     const fromUser = await this.User.query().findById(userId);
     if (!isTrueModel(fromUser)) {
       throw new UnauthorizedException();
+    }
+
+    const ref = await this.Reference.query().findById(createTransferDto.transactionReference)
+
+    if(!isTrueModel(ref)){
+      throw new ForbiddenException('no transaction reference')
+    }
+
+    if(ref.transactionId !== null) {
+      throw new ForbiddenException('duplicate transaction reference')
     }
 
     const toUser = await this.User.query().findOne({
@@ -47,6 +59,7 @@ export class TransfersService {
       userId,
       toUser.id,
       String(createTransferDto.amount),
+      createTransferDto.transactionReference,
       createTransferDto.description,
     );
 
@@ -58,17 +71,24 @@ export class TransfersService {
     return tx;
   }
 
+  async createRef() {
+    const tx = await this.Reference.query().insert({})
+    return tx;
+  }
+
   private async createTransaction(
     fromUserId: string,
     toUserId: string,
     amount: string,
+    transactionReference:string,
     description: string = '',
   ) {
     try {
       const trans = await transaction(
         Transfer,
         Entry,
-        async (Transfer, Entry) => {
+        this.Reference,
+        async (Transfer, Entry, Reference) => {
           // debit from user
           await Entry.query().insert({
             userId: fromUserId,
@@ -89,10 +109,14 @@ export class TransfersService {
             toUserId,
             amount,
             description,
+            transactionReference
           });
 
-          // add graph fetched users
-          return await Transfer.query().findById(Tf.id);
+          await Reference.query().patchAndFetchById(transactionReference, {
+            transactionId: Tf.id
+          })
+
+          return await Transfer.query().findById(Tf.id).withGraphFetched('[sender, recipient]');
         },
       );
 
@@ -103,13 +127,16 @@ export class TransfersService {
     }
   }
 
-  async getTransfers(userId: string, page: number = 1) {
+  async getTransfers(userId: string, query: FetchTransferQueryParamsDto) {
+
+    const page = Number(query?.page) || 1
     const transfers = await Transfer.query()
       .where('fromUserId', userId)
       .orWhere('toUserId', userId)
       .withGraphFetched('[sender, recipient]')
       .page(page - 1, 3);
 
-    return transfers;
+
+    return {...transfers, page};
   }
 }

@@ -23,7 +23,7 @@ export async function seed(knex: Knex): Promise<void> {
             return {
                 id: entry,
                 userId: ids.users[index],
-                amount: index == 0 ? "5000": "99999999999999",
+                amount: index == 0 ? "5000": "999999",
                 txType: index == 0 ? 'credit' : 'debit'
             }
         })

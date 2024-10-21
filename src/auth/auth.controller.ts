@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UseFilters } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UseFilters, HttpCode, HttpStatus, NotFoundException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { ResponseHandler } from 'src/common/f.interceptor';
@@ -15,6 +15,7 @@ export class AuthController {
     return this.authService.signUp(createAuthDto);
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post('/signin')
   signIn(@Body() createAuthDto: CreateAuthDto) {
     return this.authService.signIn(createAuthDto);

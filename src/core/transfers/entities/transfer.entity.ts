@@ -15,6 +15,7 @@ export class Transfer extends mixins(Model) {
   public toUserId: string;
   public amount: string;
   public description: string;
+  public transactionReference: string;
 
   public sender: User;
   public recipient: User;
@@ -50,6 +51,16 @@ export class Entry extends mixins(Model) {
   public amount: string;
   public txType: TxType;
   public description: string;
+
+  public createdAt: Date | string;
+}
+
+export class Reference extends mixins(Model) {
+
+  static tableName: string = 'references';
+
+  public readonly id: string;
+  public transactionId: string;
 
   public createdAt: Date | string;
 }

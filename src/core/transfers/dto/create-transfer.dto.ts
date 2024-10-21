@@ -16,4 +16,7 @@ export class CreateTransferDto {
 
     @JoiSchema(Joi.string().allow(""))
     description: string;
+
+    @JoiSchema(Joi.string().required())
+    transactionReference: string;
 }
