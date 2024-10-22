@@ -21,6 +21,10 @@ This is a simple money transfer system built as part of an interview assessment.
 
 Plaster is a lightweight money transfer system designed to facilitate secure and efficient financial transactions between users. Built with NestJS, this application provides a robust foundation for handling various financial operations.
 
+## Architechture
+![Untitled](https://github.com/user-attachments/assets/1308c0cd-a079-431e-9272-da814ca32b66)
+
+
 ## Features
 
 - User registration and authentication
